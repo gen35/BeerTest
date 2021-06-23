@@ -1,5 +1,7 @@
 module BeerTest
 
-# Write your package code here.
+include("main.jl")
+
+export main
 
 end
