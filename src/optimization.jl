@@ -21,17 +21,13 @@ function travel(id, groups)
     return beer_count
 end
 
-function masked_weighted_argmax(mask, betas, feat_vecs)
+function masked_weighted_argmax(mask, scores)
     id = 1
     m = floatmax(Float64) * -1
     @inbounds for i ∈ eachindex(mask)
-        score = 0.
-        for j ∈ eachindex(betas)
-            score += feat_vecs[j][i] * betas[j]
-        end
-        if mask[i] && score > m
+        if mask[i] && scores[i] > m
             id = i
-            m = score
+            m = scores[i]
         end
     end
     return id
@@ -41,13 +37,15 @@ function find_betas(coord, locinfo, config, bookkeep, feat, betas)
     beer_count, traveled = 0, 0.
     bookkeep.mask .= true
     
-    id = masked_weighted_argmax(bookkeep.mask, betas, feat())
+    calc_scores!(feat, betas)
+    id = masked_weighted_argmax(bookkeep.mask, feat.scores)
     beer_count += travel(id, locinfo.beers)
     traveled += bookkeep.pointwise[id]
     bookkeep.mask[id] = false
 
     while true
-        id_new = masked_weighted_argmax(bookkeep.mask, betas, feat(id))
+        calc_scores!(feat, betas, id)
+        id_new = masked_weighted_argmax(bookkeep.mask, feat.scores)
         bookkeep.pointwise[id_new] + coord.pairwise[id, id_new] + traveled > config.fuel_dist && break
         beer_count += travel(id_new, locinfo.beers)
         traveled += coord.pairwise[id, id_new]
