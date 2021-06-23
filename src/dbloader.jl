@@ -1,4 +1,4 @@
-using DataFrames, SQLite, LoopVectorization, LinearAlgebra
+using DataFrames, SQLite, LinearAlgebra
 
 include("paths.jl")
 include("utils.jl")
@@ -32,8 +32,8 @@ end
 function get_coord_in_radians(locations)
     long = locations[!, :longitude]::Vector{Float64}
     lat = locations[!, :latitude]::Vector{Float64}
-    long = @turbo degtorad.(long)
-    lat = @turbo degtorad.(lat)
+    long = degtorad.(long)
+    lat = degtorad.(lat)
     return long, lat
 end
 
