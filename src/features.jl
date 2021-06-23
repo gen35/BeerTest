@@ -1,6 +1,8 @@
 
 include("dbloader.jl")
 
+# some basic features: distance to destination, available beer styles, distance to starting point
+# all features are precomputed and L2-normalized 
 struct Features 
     pairwise_distance::Matrix{Float64}
     beer_count::Vector{Float64}
@@ -28,6 +30,7 @@ function calc_scores!(f::Features, betas, id)
     end
 end
 
+# different implementation needed when not traveling brewery->brewery
 function calc_scores!(f::Features, betas)
     @inbounds for i ∈ eachindex(f.scores)
         f.scores[i] = f.home_distance[i]*betas[1] + f.home_distance[i]*betas[2] + f.beer_count[i]*betas[3]   

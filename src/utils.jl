@@ -1,7 +1,7 @@
 
 degtorad(deg) = deg*π/180
-#degtorad(deg) = @fastmath deg*π/180
 
+# adapted from Distances.jl
 @inline function haversine(λ₁, φ₁, λ₂, φ₂)
     Δλ = λ₂ - λ₁  # longitudes
     Δφ = φ₂ - φ₁  # latitudes

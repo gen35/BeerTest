@@ -9,14 +9,15 @@ Base.@kwdef struct Config
 end
 
 struct BookKeep
-    mask::BitArray
-    betas::Vector{Float64}
+    mask::BitArray # keeps visited locations
+    betas::Vector{Float64} # optimization weights
     pointwise::Vector{Float64}
     function BookKeep(dim, feature_count)
         new(trues(dim), Vector{Float64}(undef, feature_count), Vector{Float64}(undef, dim))
     end
 end
 
+# finds most desirable location (local maximum) 
 function masked_weighted_argmax(mask, scores)
     id = 1
     m = floatmax(Float64) * -1
@@ -40,7 +41,7 @@ function find_betas!(coord, locinfo, config, bookkeep, feat, betas; output=false
     bookkeep.mask[id] = false  
     output && println("$(Int(traveled÷1000))km $(locinfo.locations[id, :name]) +$(size(locinfo.beers[id], 1))")
 
-    while true
+    while true 
         calc_scores!(feat, betas, id)
         id_new = masked_weighted_argmax(bookkeep.mask, feat.scores)
         bookkeep.pointwise[id_new] + coord.pairwise[id, id_new] + traveled > config.fuel_dist && break
@@ -51,13 +52,13 @@ function find_betas!(coord, locinfo, config, bookkeep, feat, betas; output=false
         output && println("$(Int(traveled÷1000))km $(locinfo.locations[id, :name]) +$(size(locinfo.beers[id], 1))")
     end
     
-    return -beer_count
+    return -beer_count # only beer count is optimized since task is ambiguous 
 end
 
 function run_optimization(coord, locinfo, config, bookkeep, feat, output=true)
     minimum = 1.
     minimizer = []
-    for _ ∈ 1:config.models
+    for _ ∈ 1:config.models # few models are run with different betas initializations
         rand!(config.rng, bookkeep.betas)
         res = optimize(betas -> find_betas!(coord, locinfo, config, bookkeep, feat, betas), bookkeep.betas, config.optimizer)
         if Optim.minimum(res) < minimum 
