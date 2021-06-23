@@ -2,7 +2,8 @@ using Random, Optim
 
 Base.@kwdef struct Config
     fuel_dist::Float64 = 2.e6
-    rng::MersenneTwister = MersenneTwister(1234)
+    seed::Int = 1234
+    rng::MersenneTwister = MersenneTwister(seed)
     optimizer::Optim.AbstractOptimizer = NelderMead()
     models::Int = 20
 end
