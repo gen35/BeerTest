@@ -1,6 +1,6 @@
 using DataFrames, SQLite, LinearAlgebra
 
-include("paths.jl")
+include("database.jl")
 include("utils.jl")
 
 struct Coordinates
