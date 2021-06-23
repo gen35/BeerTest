@@ -16,11 +16,6 @@ struct BookKeep
     end
 end
 
-function travel(id, groups)
-    beer_count = size(groups[id], 1)
-    return beer_count
-end
-
 function masked_weighted_argmax(mask, scores)
     id = 1
     m = floatmax(Float64) * -1
@@ -33,26 +28,28 @@ function masked_weighted_argmax(mask, scores)
     return id
 end
 
-function find_betas(coord, locinfo, config, bookkeep, feat, betas)
+function find_betas!(coord, locinfo, config, bookkeep, feat, betas; output=false)
     beer_count, traveled = 0, 0.
     bookkeep.mask .= true
     
     calc_scores!(feat, betas)
     id = masked_weighted_argmax(bookkeep.mask, feat.scores)
-    beer_count += travel(id, locinfo.beers)
+    beer_count += size(locinfo.beers[id], 1)
     traveled += bookkeep.pointwise[id]
-    bookkeep.mask[id] = false
+    bookkeep.mask[id] = false  
+    output && println("$(Int(traveled÷1000))km $(locinfo.locations[id, :name]) +$(size(locinfo.beers[id], 1))")
 
     while true
         calc_scores!(feat, betas, id)
         id_new = masked_weighted_argmax(bookkeep.mask, feat.scores)
         bookkeep.pointwise[id_new] + coord.pairwise[id, id_new] + traveled > config.fuel_dist && break
-        beer_count += travel(id_new, locinfo.beers)
+        beer_count += size(locinfo.beers[id], 1)
         traveled += coord.pairwise[id, id_new]
         id = id_new
         bookkeep.mask[id] = false
+        output && println("$(Int(traveled÷1000))km $(locinfo.locations[id, :name]) +$(size(locinfo.beers[id], 1))")
     end
-
+    
     return -beer_count
 end
 
@@ -61,14 +58,14 @@ function run_optimization(coord, locinfo, config, bookkeep, feat)
     minimizer = []
     for _ ∈ 1:config.models
         rand!(config.rng, bookkeep.betas)
-        res = optimize(betas -> find_betas(coord, locinfo, config, bookkeep, feat, betas), bookkeep.betas, config.optimizer)
+        res = optimize(betas -> find_betas!(coord, locinfo, config, bookkeep, feat, betas), bookkeep.betas, config.optimizer)
         if Optim.minimum(res) < minimum 
             minimum = Optim.minimum(res)
             minimizer = Optim.minimizer(res)
         end
     end
 
-    @show minimum
-    @show minimizer
+    find_betas!(coord, locinfo, config, bookkeep, feat, minimizer; output=true)
+    println("Beer count: $(Int(-minimum))")
     return
 end
