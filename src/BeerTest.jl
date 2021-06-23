@@ -2,6 +2,6 @@ module BeerTest
 
 include("main.jl")
 
-export main
+export main, initialize
 
 end
