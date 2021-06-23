@@ -54,7 +54,7 @@ function find_betas!(coord, locinfo, config, bookkeep, feat, betas; output=false
     return -beer_count
 end
 
-function run_optimization(coord, locinfo, config, bookkeep, feat)
+function run_optimization(coord, locinfo, config, bookkeep, feat, output=true)
     minimum = 1.
     minimizer = []
     for _ ∈ 1:config.models
@@ -66,7 +66,7 @@ function run_optimization(coord, locinfo, config, bookkeep, feat)
         end
     end
 
-    find_betas!(coord, locinfo, config, bookkeep, feat, minimizer; output=true)
-    println("Beer count: $(Int(-minimum))")
-    return
+    find_betas!(coord, locinfo, config, bookkeep, feat, minimizer; output=output)
+    output && println("Beer count: $(Int(-minimum))")
+    return (Int(-minimum))
 end
